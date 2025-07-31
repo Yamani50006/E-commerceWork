@@ -4,8 +4,9 @@ import { getCart, addToCart as addToCartUtil } from '../../lib/cart/cartUtils';
 import Hero from '../component/products/hero';
 import ProductCard from '../component/products/ProductCard';
 import { IProduct } from '@/lib/types';
-
+import { useCartStore } from '@/useStore/cart';
 export default function ProductsPage() {
+ const {addCart}=useCartStore();
   const [products, setProducts] = useState<IProduct[]>([]);
   const [filtered, setFiltered] = useState<IProduct[]>([]);
   const [search, setSearch] = useState('');
@@ -20,7 +21,9 @@ export default function ProductsPage() {
         setFiltered(data);
       });
     setCart(getCart());
+  
   }, []);
+
 
   useEffect(() => {
     let result = products;
@@ -38,13 +41,13 @@ export default function ProductsPage() {
   const addToCart = (id: number) => {
     addToCartUtil(id);
     setCart(getCart());
+    addCart(id);
   };
 
   const removeProduct = (id: number) => {
     setProducts(products.filter(p => p.id !== id));
     setFiltered(filtered.filter(p => p.id !== id));
   };
-
 
   return (
     <div className='px-4 py-2 grid-cols-1  lg:grid-cols-4 gap-4  ' >

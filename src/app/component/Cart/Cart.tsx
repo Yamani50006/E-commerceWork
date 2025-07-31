@@ -22,8 +22,12 @@ import Image from "next/image";
 import { IProduct } from "@/lib/types";
 import { Monitor, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useCartStore } from "@/useStore/cart";
+import ProductCard from "../products/ProductCard";
+
 export function Cart() {
   // const [count, setCount] = React.useState<number>(0);
+  const {Carts,removeCart,clearCart}=useCartStore();
   const [cart, setCart] = React.useState<number[]>([]);
   const [products, setProducts] = React.useState<IProduct[]>([]);
   const router = useRouter();
@@ -35,43 +39,71 @@ export function Cart() {
       .then((data) => setProducts(data));
   }, []);
 
+
   //get cart from localStorage
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("cart");
-      if (stored) setCart(JSON.parse(stored));
-      else setCart([]);
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (typeof window !== "undefined") {
+  //     const stored = localStorage.getItem("cart");
+  //     if (stored) setCart(JSON.parse(stored));
+  //     else setCart([]);
+  //   }
+  // }, []);
 
  
 
   // المنتجات الموجودة في السلة
-  const cartProducts = products.filter((p) => cart.includes(p.id));
+  const cartProducts = products.filter((p) =>Carts.includes(p.id));
+
+  const handelRemove=(id:number)=>{
+    removeCart(id);
+    setCart(Carts);
+  }
+
+  
+  const handelClearCarts=()=>{
+    clearCart();
+  }
+
+  const totalCarts=()=>{
+    return Carts.length;
+  }
+
+  const totalPrice=()=>{
+    return Carts.reduce((sum,id)=>{
+      const product=products.find((p)=>p.id===id);
+      if(product){
+        return sum+product.price;
+      }
+      return sum;
+     
+    },0)
+
+
+  }
 
   // حساب الإجمالي
-  const totalPrice = useCallback(() => {
-    return cartProducts.reduce((sum, p) => sum + p.price, 0);
-  }, [cartProducts]);
+  // const totalPrice = useCallback(() => {
+  //   return cartProducts.reduce((sum, p) => sum + p.price, 0);
+  // }, [cartProducts]);
 
   // عدد المنتجات في السلة
-const countCart = useCallback(() => {
-  return cartProducts.reduce((sum) => sum + 1, 0);
-},[cartProducts])
+// const countCart = useCallback(() => {
+//   return cartProducts.reduce((sum) => sum + 1, 0);
+// },[cartProducts])
 
   // حذف منتج من السلة
-  const handleRemoveFromCart = useCallback((id: number) => {
-    const updated = cart.filter((pid) => pid !== id);
-    setCart(updated);
-    localStorage.setItem("cart", JSON.stringify(updated));
-  }, [cart]);
+  // const handleRemoveFromCart = useCallback((id: number) => {
+  //   const updated = cart.filter((pid) => pid !== id);
+  //   setCart(updated);
+  //   localStorage.setItem("cart", JSON.stringify(updated));
+  // }, [cart]);
 
   // حذف كل المنتجات من السلة
-  const handleClearCart = useCallback(() => {
-    setCart([]);
-    localStorage.setItem("cart", JSON.stringify([]));
-    clearCart();
-  }, []);
+  // const handleClearCart = useCallback(() => {
+  //   setCart([]);
+  //   localStorage.setItem("cart", JSON.stringify([]));
+  //   clearCart();
+  // }, []);
 
   const StyledBadge = styled(Badge)<BadgeProps>(({ theme }) => ({
     "& .MuiBadge-badge": {
@@ -88,7 +120,7 @@ const countCart = useCallback(() => {
     <Sheet>
       <SheetTrigger asChild>
         <IconButton aria-label="cart">
-          <StyledBadge badgeContent={countCart()} color="primary">
+          <StyledBadge badgeContent={totalCarts()||0} color="primary">
             <ShoppingCartIcon className="w-5 sm:w-6 h-5 sm:h-6 text-gray-300" />
           </StyledBadge>
         </IconButton>
@@ -125,7 +157,7 @@ const countCart = useCallback(() => {
                         {item.price}$
                       </p>
                       <div className="flex gap-2">
-                        <Trash size={20} className="cursor-pointer text-red-500 hover:scale-3d hover:text-red-600 transition-all" onClick={() => handleRemoveFromCart(item.id)} />
+                        <Trash size={20} className="cursor-pointer text-red-500 hover:scale-3d hover:text-red-600 transition-all" onClick={() =>handelRemove(item.id) } />
                         <Monitor size={20} onClick={() => { 
                           router.push(`/products/${item.id}?product=${JSON.stringify(item)}`)
                         }}  />
@@ -143,9 +175,9 @@ const countCart = useCallback(() => {
             <span>الاجمالي</span>
             <span className="text-lg font-bold">{totalPrice()}$</span>
           </div>
-          <SheetClose asChild >
-            <Button  onClick={handleClearCart} >حذف الكل</Button>
-          </SheetClose>
+         
+            <Button  onClick={()=>handelClearCarts()} >حذف الكل</Button>
+         
           <SheetClose asChild>
             <Button variant="outline">Close</Button>
           </SheetClose>
